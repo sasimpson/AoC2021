@@ -17,6 +17,7 @@ type move struct {
 type position struct {
 	distance int
 	depth    int
+	aim      int
 }
 
 func main() {
@@ -31,10 +32,11 @@ func main() {
 		switch m.Direction {
 		case "forward":
 			pos.distance += m.Value
+			pos.depth += pos.aim * m.Value
 		case "up":
-			pos.depth -= m.Value
+			pos.aim -= m.Value
 		case "down":
-			pos.depth += m.Value
+			pos.aim += m.Value
 		}
 	}
 
