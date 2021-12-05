@@ -87,7 +87,10 @@ type diagnostics struct {
 }
 
 func (d *diagnostics) load(filename string) error {
-	file, _ := os.Open(filename)
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
