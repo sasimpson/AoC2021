@@ -7,11 +7,60 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/ttacon/chalk"
 )
 
 type bingoSubSystem struct {
 	numbers []uint64
 	cards   [][][]uint64
+	calls   [][][]bool
+}
+
+func (bss *bingoSubSystem) validateCoords(card, row, col uint64) bool {
+	return (uint64(len(bss.cards[card])) > row && row >= 0) && (uint64(len(bss.cards[card][row])) > col && col >= 0)
+}
+
+func (bss *bingoSubSystem) playNumber(num uint64) {
+	for i, card := range bss.cards {
+		for row := 0; row < len(card); row++ {
+			for col := 0; col < len(card[row]); col++ {
+				if num == card[row][col] {
+					bss.calls[i][row][col] = true
+				} else {
+					bss.calls[i][row][col] = false
+				}
+			}
+		}
+	}
+}
+func (bss *bingoSubSystem) analyze() {
+	for _, num := range bss.numbers {
+		for card := range bss.cards {
+			for row := range bss.cards[card] {
+				for col, cardNum := range bss.cards[card][row] {
+					if num == cardNum {
+						bss.calls[card][row][col] = true
+					} else {
+						bss.calls[card][row][col] = false
+					}
+				}
+			}
+		}
+	}
+}
+
+func (bss *bingoSubSystem) displayCard(card uint64) {
+	for row := range bss.cards[card] {
+		for col := range bss.cards[card][row] {
+			if bss.calls[card][row][col] {
+				fmt.Printf(chalk.White.Color("[%2d]"), bss.cards[card][row][col])
+			} else {
+				fmt.Printf(chalk.White.Color("[%2d]"), bss.cards[card][row][col])
+			}
+		}
+		fmt.Printf("\n")
+	}
 }
 
 func (bss *bingoSubSystem) load(filename string) error {
@@ -35,7 +84,7 @@ func (bss *bingoSubSystem) load(filename string) error {
 	scanner.Scan() //blank line between numbers and puzzles
 
 	var board [][]uint64 //holder for the boards generated in the for loop
-	re := regexp.MustCompile("\\s+")
+	re := regexp.MustCompile(`\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)`)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {
@@ -44,7 +93,8 @@ func (bss *bingoSubSystem) load(filename string) error {
 		} else {
 			var boardLine []uint64
 			if re.MatchString(line) {
-				for _, x := range re.FindStringSubmatch(line)[1:] {
+				sm := re.FindStringSubmatch(line)
+				for _, x := range sm[1:] {
 					number, err := strconv.ParseUint(x, 10, 64)
 					if err != nil {
 						return err
@@ -59,7 +109,6 @@ func (bss *bingoSubSystem) load(filename string) error {
 	if err := scanner.Err(); err != nil {
 		return err
 	}
-
 	fmt.Println("bingo subsystem loaded")
 	return nil
 }
@@ -67,6 +116,9 @@ func (bss *bingoSubSystem) load(filename string) error {
 func main() {
 
 	bss := bingoSubSystem{}
-	bss.load("data/bingo.txt")
+	_ = bss.load("data/bingo.txt")
 
+	for card := range bss.cards {
+		bss.displayCard(uint64(card))
+	}
 }
