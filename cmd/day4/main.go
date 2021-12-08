@@ -31,7 +31,6 @@ func (bss *bingoSubSystem) analyze() {
 					bss.calls[l.card][l.row][l.col] = true
 					winner := bss.checkCard(l)
 					if winner {
-						fmt.Println("card ", l.card, " won on number", num)
 						//append winning card, need to not check cards that have already won
 						bss.scores[l.card] = bss.calcCard(l, num)
 						bss.winners = append(bss.winners, l.card)
