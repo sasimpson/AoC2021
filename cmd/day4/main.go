@@ -20,40 +20,57 @@ type numberCoords struct {
 	card, row, col int
 }
 
-//func (bss *bingoSubSystem) playNumber(num uint64) {
-//	for i, card := range bss.cards {
-//		for row := 0; row < len(card); row++ {
-//			for col := 0; col < len(card[row]); col++ {
-//				if num == card[row][col] {
-//					fmt.Println("match", i, row, col)
-//					bss.calls[i][row][col] = true
-//				} else {
-//					bss.calls[i][row][col] = false
-//				}
-//			}
-//		}
-//	}
-//}
-
-func (bss *bingoSubSystem) analyze() {
+func (bss *bingoSubSystem) analyze() uint64 {
 	for _, num := range bss.numbers {
 		if _, ok := bss.lookup[num]; ok {
 			for _, l := range bss.lookup[num] {
-				fmt.Printf("looking up card %d (%d, %d)\n", l.card, l.row, l.col)
+				//fmt.Printf("looking up card %d (%d, %d)\n", l.card, l.row, l.col)
 				bss.calls[l.card][l.row][l.col] = true
+				winner := bss.checkCard(l)
+				if winner {
+					fmt.Printf("card %d wins", l.card)
+					var sum uint64
+					for row := 0; row < 5; row++ {
+						for col := 0; col < 5; col++ {
+							if bss.calls[l.card][row][col] == false {
+								sum += bss.cards[l.card][row][col]
+							}
+						}
+					}
+					return sum * num
+				}
 			}
 		}
 	}
+	return 0
 }
 
-func (bss *bingoSubSystem) displayCard(card uint64) {
-	for row := range bss.cards[card] {
-		for col := range bss.cards[card][row] {
-			fmt.Printf("[%2d]", bss.cards[card][row][col])
-
+func (bss *bingoSubSystem) checkCard(lookup numberCoords) bool {
+	calls := bss.calls[lookup.card]
+	//horizontal
+	var horzTotal int
+	for i := 0; i < len(calls[lookup.row]); i++ {
+		if calls[lookup.row][i] == true {
+			horzTotal++
+		} else {
+			continue
 		}
-		fmt.Printf("\n")
 	}
+
+	//vertical
+	var vertTotal int
+	for i := 0; i < len(calls); i++ {
+		if calls[i][lookup.col] == true {
+			vertTotal++
+		} else {
+			continue
+		}
+	}
+
+	if vertTotal == 5 || horzTotal == 5 {
+		return true
+	}
+	return false
 }
 
 func (bss *bingoSubSystem) load(filename string) error {
@@ -107,6 +124,8 @@ func (bss *bingoSubSystem) load(filename string) error {
 			}
 		}
 	}
+	bss.cards = append(bss.cards, board)
+	bss.calls = append(bss.calls, calls)
 
 	if err := scanner.Err(); err != nil {
 		return err
@@ -119,10 +138,10 @@ func main() {
 
 	bss := bingoSubSystem{}
 	_ = bss.load("data/bingo.txt")
-	bss.analyze()
+	winner := bss.analyze()
 
 	//for card := range bss.cards {
 	//bss.displayCard(uint64(card))
-	fmt.Println()
+	fmt.Println("winner: ", winner)
 	//}
 }
