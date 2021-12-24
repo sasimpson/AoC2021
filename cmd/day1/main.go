@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	prev, increases int64
+	prev, increases int
 
 	ErrInvalidIndex = errors.New("invalid index for array given (over or negative)")
 )
@@ -42,15 +42,15 @@ func main() {
 
 }
 
-func sum(data *[]int64) int64 {
-	var sum int64
+func sum(data *[]int) int {
+	var sum int
 	for _, d := range *data {
 		sum += d
 	}
 	return sum
 }
 
-func getWindow(data *[]int64, pos int, window int) ([]int64, error) {
+func getWindow(data *[]int, pos int, window int) ([]int, error) {
 	//index issues
 	if pos < 0 || pos > len(*data) || pos+window > len(*data) {
 		return nil, ErrInvalidIndex
@@ -60,7 +60,7 @@ func getWindow(data *[]int64, pos int, window int) ([]int64, error) {
 
 }
 
-func readData(filename string) (data []int64, err error) {
+func readData(filename string) (data []int, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return data, err
@@ -69,16 +69,16 @@ func readData(filename string) (data []int64, err error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line, err := strconv.ParseInt(scanner.Text(), 10, 32)
+		line, err := strconv.Atoi(scanner.Text())
 		if err != nil {
-			return []int64{}, err
+			return []int{}, err
 		}
 
 		data = append(data, line)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return []int64{}, err
+		return []int{}, err
 	}
 	return
 }
