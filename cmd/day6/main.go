@@ -64,12 +64,14 @@ func (s *school) load(filename string) error {
 
 func (s *school) incrementDay() {
 	var newFish []fish
-	for _, f := range s.fish {
+	for i, f := range s.fish {
 		if f.timer == 0 {
 			nf := f.spawn()
 			if nf != nil {
 				newFish = append(newFish, *nf)
 			}
+		} else {
+			s.fish[i].timer--
 		}
 	}
 	s.fish = append(s.fish, newFish...)
@@ -80,7 +82,7 @@ func (f fish) String() string {
 	return strconv.Itoa(f.timer)
 }
 
-func (f *fish) spawn() *fish {
+func (f fish) spawn() *fish {
 	if f.timer == 0 {
 		f.timer = 6
 		return &fish{timer: 8}
@@ -95,6 +97,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	s.incrementDay()
+	fmt.Println(s)
+	s.incrementDay()
+	fmt.Println(s)
 	s.incrementDay()
 	fmt.Println(s)
 }
