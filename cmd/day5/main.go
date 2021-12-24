@@ -13,6 +13,8 @@ var (
 	coordRegExp = `^(\d+),(\d+) -> (\d+),(\d+)`
 )
 
+const SIZE = 1000
+
 type point struct {
 	x, y int
 }
@@ -23,7 +25,7 @@ type line struct {
 
 type vents struct {
 	data     []line
-	chart    [10][10]int
+	chart    [SIZE][SIZE]int
 	overlaps map[point]int
 }
 
@@ -94,9 +96,9 @@ func (l line) Iterator() ([]int, []int) {
 				returnY = append(returnY, i)
 			}
 		}
-	default:
+	case l.IsDiagonal():
 		if l.start.x > l.end.x {
-			for i := l.start.y; i >= l.end.y; i-- {
+			for i := l.start.x; i >= l.end.x; i-- {
 				returnX = append(returnX, i)
 			}
 		} else {
@@ -119,12 +121,7 @@ func (l line) Iterator() ([]int, []int) {
 
 func (v *vents) analyze() {
 	fmt.Println("v.overlaps length", len(v.overlaps))
-	count := 0
-	for _, v := range v.overlaps {
-		count += v
-	}
 
-	fmt.Println("v.overlaps total", count)
 }
 
 func (v *vents) display() {
@@ -217,33 +214,32 @@ func (v *vents) load(filename string) error {
 		//if x and y are not the same, diagonal
 		case l.IsDiagonal():
 			iterX, iterY := l.Iterator()
-			for _, y := range iterY {
-				for _, x := range iterX {
-					p := point{x, y}
-					v.chart[y][x]++
-					if v.chart[y][x] >= 2 {
-						if _, ok := v.overlaps[p]; !ok {
-							v.overlaps[p] = 1
-						} else {
-							v.overlaps[p]++
-						}
+			for i := 0; i < len(iterY); i++ {
+				p := point{iterX[i], iterY[i]}
+				v.chart[p.y][p.x]++
+				if v.chart[p.y][p.x] >= 2 {
+					if _, ok := v.overlaps[p]; !ok {
+						v.overlaps[p] = 1
+					} else {
+						v.overlaps[p]++
 					}
 				}
 			}
-		}
 
+		}
 	}
 	return nil
 }
 
 func main() {
 	var v vents
-	err := v.load("data/vents_sample.txt")
+	err := v.load("data/vents.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	v.display()
+	//v.display()
+
 	v.analyze()
 	fmt.Println()
 }
