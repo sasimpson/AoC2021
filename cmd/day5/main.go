@@ -23,7 +23,7 @@ type line struct {
 
 type vents struct {
 	data     []line
-	chart    [1000][1000]int
+	chart    [10][10]int
 	overlaps map[point]int
 }
 
@@ -214,7 +214,24 @@ func (v *vents) load(filename string) error {
 					}
 				}
 			}
+		//if x and y are not the same, diagonal
+		case l.IsDiagonal():
+			iterX, iterY := l.Iterator()
+			for _, y := range iterY {
+				for _, x := range iterX {
+					p := point{x, y}
+					v.chart[y][x]++
+					if v.chart[y][x] >= 2 {
+						if _, ok := v.overlaps[p]; !ok {
+							v.overlaps[p] = 1
+						} else {
+							v.overlaps[p]++
+						}
+					}
+				}
+			}
 		}
+
 	}
 	return nil
 }
@@ -226,7 +243,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//v.display()
+	v.display()
 	v.analyze()
 	fmt.Println()
 }

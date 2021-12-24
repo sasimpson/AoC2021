@@ -60,6 +60,14 @@ func Test_line_Iterator(t *testing.T) {
 			},
 			wantX: []int{5, 4, 3, 2, 1, 0},
 			wantY: []int{5, 4, 3, 2, 1, 0},
+		}, {
+			name: "odd diagonal",
+			fields: fields{
+				start: point{x: 0, y: 0},
+				end:   point{x: 5, y: 3},
+			},
+			wantX: []int{0, 1, 2, 3, 4, 5},
+			wantY: []int{0, 1, 2, 3},
 		},
 	}
 	for _, tt := range tests {
