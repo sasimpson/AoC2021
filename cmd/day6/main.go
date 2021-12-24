@@ -70,6 +70,7 @@ func (s *school) incrementDay() {
 			if nf != nil {
 				newFish = append(newFish, *nf)
 			}
+			s.fish[i].timer = 6
 		} else {
 			s.fish[i].timer--
 		}
@@ -82,7 +83,7 @@ func (f fish) String() string {
 	return strconv.Itoa(f.timer)
 }
 
-func (f fish) spawn() *fish {
+func (f *fish) spawn() *fish {
 	if f.timer == 0 {
 		f.timer = 6
 		return &fish{timer: 8}
@@ -93,14 +94,14 @@ func (f fish) spawn() *fish {
 func main() {
 	var s school
 
-	err := s.load("data/lanternfish_sample.txt")
+	err := s.load("data/lanternfish.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	s.incrementDay()
-	fmt.Println(s)
-	s.incrementDay()
-	fmt.Println(s)
-	s.incrementDay()
-	fmt.Println(s)
+
+	for i := 0; i < 80; i++ {
+		s.incrementDay()
+		//fmt.Println(s)
+	}
+	fmt.Printf("total fish: %d", len(s.fish))
 }
