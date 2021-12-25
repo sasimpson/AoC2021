@@ -14,8 +14,14 @@ type Stringer interface {
 }
 
 type school struct {
-	day  int
-	fish []fish
+	day         int
+	fish        []fish
+	generations [8]generation
+}
+
+type generation struct {
+	id    int
+	count int
 }
 
 type fish struct {
@@ -41,6 +47,13 @@ func (s school) String() string {
 	return fmt.Sprintf("After %2d days: %s", s.day, data)
 }
 
+func (s *school) init() {
+	for i := 0; i < 8; i++ {
+		s.generations[i].id = i
+	}
+	fmt.Printf("%#v\n", s.generations)
+}
+
 func (s *school) load(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -56,27 +69,31 @@ func (s *school) load(filename string) error {
 			if err != nil {
 				return err
 			}
-			s.fish = append(s.fish, fish{timer: timer})
+			s.generations[timer].count++
+			//s.fish = append(s.fish, fish{timer: timer})
 		}
 	}
 	return nil
 }
 
 func (s *school) incrementDay() {
-	var newFish []fish
-	for i, f := range s.fish {
-		if f.timer == 0 {
-			nf := f.spawn()
-			if nf != nil {
-				newFish = append(newFish, *nf)
-			}
-			s.fish[i].timer = 6
-		} else {
-			s.fish[i].timer--
-		}
-	}
-	s.fish = append(s.fish, newFish...)
-	s.day++
+	//for i, g := range s.generations {
+	//
+	//}
+	//var newFish []fish
+	//for i, f := range s.fish {
+	//	if f.timer == 0 {
+	//		nf := f.spawn()
+	//		if nf != nil {
+	//			newFish = append(newFish, *nf)
+	//		}
+	//		s.fish[i].timer = 6
+	//	} else {
+	//		s.fish[i].timer--
+	//	}
+	//}
+	//s.fish = append(s.fish, newFish...)
+	//s.day++
 }
 
 func (f fish) String() string {
@@ -94,14 +111,18 @@ func (f *fish) spawn() *fish {
 func main() {
 	var s school
 
-	err := s.load("data/lanternfish.txt")
+	s.init()
+	err := s.load("data/lanternfish_sample.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for i := 0; i < 80; i++ {
-		s.incrementDay()
-		//fmt.Println(s)
-	}
-	fmt.Printf("total fish: %d", len(s.fish))
+	fmt.Printf("%#v", s.generations)
+
+	//for i := 0; i < 256; i++ {
+	//	s.incrementDay()
+	//	fmt.Println("day", i, "len", len(s.fish))
+	//	//fmt.Println(s)
+	//}
+	//fmt.Printf("total fish: %d", len(s.fish))
 }
