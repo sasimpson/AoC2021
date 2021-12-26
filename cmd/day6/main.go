@@ -16,7 +16,7 @@ type Stringer interface {
 type school struct {
 	day         int
 	fish        []fish
-	generations [8]generation
+	generations [][]generation
 }
 
 type generation struct {
@@ -48,9 +48,11 @@ func (s school) String() string {
 }
 
 func (s *school) init() {
-	for i := 0; i < 8; i++ {
-		s.generations[i].id = i
+	initGenerations := make([]generation, 9)
+	for i := 0; i <= 8; i++ {
+		initGenerations[i].id = i
 	}
+	s.generations = append(s.generations, initGenerations)
 	fmt.Printf("%#v\n", s.generations)
 }
 
@@ -69,31 +71,26 @@ func (s *school) load(filename string) error {
 			if err != nil {
 				return err
 			}
-			s.generations[timer].count++
-			//s.fish = append(s.fish, fish{timer: timer})
+			s.generations[0][timer].count++
 		}
 	}
 	return nil
 }
 
-func (s *school) incrementDay() {
-	//for i, g := range s.generations {
-	//
-	//}
-	//var newFish []fish
-	//for i, f := range s.fish {
-	//	if f.timer == 0 {
-	//		nf := f.spawn()
-	//		if nf != nil {
-	//			newFish = append(newFish, *nf)
-	//		}
-	//		s.fish[i].timer = 6
-	//	} else {
-	//		s.fish[i].timer--
-	//	}
-	//}
-	//s.fish = append(s.fish, newFish...)
-	//s.day++
+func (s *school) incrementDay() []generation {
+	currentGen := s.generations[len(s.generations)-1]
+	nextGen := make([]generation, 9)
+	for i := 0; i <= 8; i++ {
+		switch {
+		//if current gen is 0, the next gen will spawn count of current gen
+		case i == 0:
+			nextGen[8].count += currentGen[0].count
+			nextGen[6].count = currentGen[0].count
+		case i < 8:
+			nextGen[i].count = currentGen[i+1].count
+		}
+	}
+	return nextGen
 }
 
 func (f fish) String() string {
@@ -119,10 +116,10 @@ func main() {
 
 	fmt.Printf("%#v", s.generations)
 
-	//for i := 0; i < 256; i++ {
-	//	s.incrementDay()
-	//	fmt.Println("day", i, "len", len(s.fish))
-	//	//fmt.Println(s)
-	//}
-	//fmt.Printf("total fish: %d", len(s.fish))
+	for i := 0; i < 12; i++ {
+		s.generations = append(s.generations, s.incrementDay())
+		fmt.Println("day", i, "len", len(s.fish))
+		fmt.Println(s)
+	}
+	fmt.Printf("total fish: %d", len(s.fish))
 }
