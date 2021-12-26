@@ -28,6 +28,18 @@ type fish struct {
 	timer int
 }
 
+func (g generation) String() string {
+	return fmt.Sprintf("%d:%d", g.id, g.count)
+}
+
+func (s school) Sum() int {
+	var sum int
+	for _, g := range s.generations[len(s.generations)-1] {
+		sum += g.count
+	}
+	return sum
+}
+
 //join - join a stringer into 1 string.  playing with generics :D
 func join[T Stringer](t []T, sep string) string {
 	// if the len is not >= 2 then we have nothing to join.
@@ -43,8 +55,11 @@ func join[T Stringer](t []T, sep string) string {
 }
 
 func (s school) String() string {
-	data := join(s.fish, ",")
-	return fmt.Sprintf("After %2d days: %s", s.day, data)
+	var retVal []string
+	for _, g := range s.generations {
+		retVal = append(retVal, fmt.Sprintf("%s", join(g, "|")))
+	}
+	return strings.Join(retVal, "\n")
 }
 
 func (s *school) init() {
@@ -53,7 +68,6 @@ func (s *school) init() {
 		initGenerations[i].id = i
 	}
 	s.generations = append(s.generations, initGenerations)
-	fmt.Printf("%#v\n", s.generations)
 }
 
 func (s *school) load(filename string) error {
@@ -84,10 +98,14 @@ func (s *school) incrementDay() []generation {
 		switch {
 		//if current gen is 0, the next gen will spawn count of current gen
 		case i == 0:
-			nextGen[8].count += currentGen[0].count
-			nextGen[6].count = currentGen[0].count
-		case i < 8:
-			nextGen[i].count = currentGen[i+1].count
+			nextGen[6].count += currentGen[0].count
+			nextGen[6].id = 6
+			nextGen[8].count = currentGen[0].count
+			nextGen[8].id = 8
+
+		case i <= 8:
+			nextGen[i-1].count += currentGen[i].count
+			nextGen[i-1].id = i - 1
 		}
 	}
 	return nextGen
@@ -109,17 +127,14 @@ func main() {
 	var s school
 
 	s.init()
-	err := s.load("data/lanternfish_sample.txt")
+	err := s.load("data/lanternfish.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%#v", s.generations)
-
-	for i := 0; i < 12; i++ {
-		s.generations = append(s.generations, s.incrementDay())
-		fmt.Println("day", i, "len", len(s.fish))
-		fmt.Println(s)
+	for i := 0; i < 256; i++ {
+		nextGen := s.incrementDay()
+		s.generations = append(s.generations, nextGen)
 	}
-	fmt.Printf("total fish: %d", len(s.fish))
+	fmt.Println(s.Sum())
 }
