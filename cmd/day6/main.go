@@ -14,12 +14,30 @@ type Stringer interface {
 }
 
 type school struct {
-	day  int
-	fish []fish
+	day         int
+	fish        []fish
+	generations [][]generation
+}
+
+type generation struct {
+	id    int
+	count int
 }
 
 type fish struct {
 	timer int
+}
+
+func (g generation) String() string {
+	return fmt.Sprintf("%d:%d", g.id, g.count)
+}
+
+func (s school) Sum() int {
+	var sum int
+	for _, g := range s.generations[len(s.generations)-1] {
+		sum += g.count
+	}
+	return sum
 }
 
 //join - join a stringer into 1 string.  playing with generics :D
@@ -37,8 +55,19 @@ func join[T Stringer](t []T, sep string) string {
 }
 
 func (s school) String() string {
-	data := join(s.fish, ",")
-	return fmt.Sprintf("After %2d days: %s", s.day, data)
+	var retVal []string
+	for _, g := range s.generations {
+		retVal = append(retVal, fmt.Sprintf("%s", join(g, "|")))
+	}
+	return strings.Join(retVal, "\n")
+}
+
+func (s *school) init() {
+	initGenerations := make([]generation, 9)
+	for i := 0; i <= 8; i++ {
+		initGenerations[i].id = i
+	}
+	s.generations = append(s.generations, initGenerations)
 }
 
 func (s *school) load(filename string) error {
@@ -56,27 +85,30 @@ func (s *school) load(filename string) error {
 			if err != nil {
 				return err
 			}
-			s.fish = append(s.fish, fish{timer: timer})
+			s.generations[0][timer].count++
 		}
 	}
 	return nil
 }
 
-func (s *school) incrementDay() {
-	var newFish []fish
-	for i, f := range s.fish {
-		if f.timer == 0 {
-			nf := f.spawn()
-			if nf != nil {
-				newFish = append(newFish, *nf)
-			}
-			s.fish[i].timer = 6
-		} else {
-			s.fish[i].timer--
+func (s *school) incrementDay() []generation {
+	currentGen := s.generations[len(s.generations)-1]
+	nextGen := make([]generation, 9)
+	for i := 0; i <= 8; i++ {
+		switch {
+		//if current gen is 0, the next gen will spawn count of current gen
+		case i == 0:
+			nextGen[6].count += currentGen[0].count
+			nextGen[6].id = 6
+			nextGen[8].count = currentGen[0].count
+			nextGen[8].id = 8
+
+		case i <= 8:
+			nextGen[i-1].count += currentGen[i].count
+			nextGen[i-1].id = i - 1
 		}
 	}
-	s.fish = append(s.fish, newFish...)
-	s.day++
+	return nextGen
 }
 
 func (f fish) String() string {
@@ -94,14 +126,15 @@ func (f *fish) spawn() *fish {
 func main() {
 	var s school
 
+	s.init()
 	err := s.load("data/lanternfish.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for i := 0; i < 80; i++ {
-		s.incrementDay()
-		//fmt.Println(s)
+	for i := 0; i < 256; i++ {
+		nextGen := s.incrementDay()
+		s.generations = append(s.generations, nextGen)
 	}
-	fmt.Printf("total fish: %d", len(s.fish))
+	fmt.Println(s.Sum())
 }
