@@ -59,6 +59,7 @@ func (s *swarm) analyze() {
 		for _, c := range s.crabs {
 			fuel += c.fuelToPos(i)
 		}
+
 		if s.bestPosition.fuel == 0 {
 			s.bestPosition.fuel = 10000000
 		}
@@ -66,27 +67,30 @@ func (s *swarm) analyze() {
 			s.bestPosition.fuel = fuel
 			s.bestPosition.position = i
 		}
+		fmt.Println("Pos", i, "fuel", fuel)
 	}
 }
 
 func (c *crab) fuelToPos(pos int) int {
-	fuel := c.position - pos
-
-	if fuel < 0 {
-		return -fuel
+	var fuel int
+	steps := c.position - pos
+	if steps < 0 {
+		return -steps
 	}
+	for i := 1; i <= steps; i++ {
+		fuel += i
+	}
+	fmt.Println("c pos:", c.position, "fuel:", fuel)
 	return fuel
 }
 
 func main() {
-
 	var s swarm
-	err := s.load("data/crabs.txt")
+	err := s.load("data/crabs_sample.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	s.analyze()
-	fmt.Println("Pos", s.bestPosition.position, "fuel", s.bestPosition.fuel)
-
+	//fmt.Println("Pos", s.bestPosition.position, "fuel", s.bestPosition.fuel)
 }
