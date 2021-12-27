@@ -14,7 +14,11 @@ type crab struct {
 }
 
 type swarm struct {
-	crabs []crab
+	crabs        []crab
+	min, max     int
+	bestPosition struct {
+		position, fuel int
+	}
 }
 
 func (s *swarm) load(filename string) error {
@@ -23,6 +27,9 @@ func (s *swarm) load(filename string) error {
 		return err
 	}
 	defer file.Close()
+
+	var min, max int
+	min = 1000
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -33,19 +40,53 @@ func (s *swarm) load(filename string) error {
 				return err
 			}
 			s.crabs = append(s.crabs, crab{position: crabPos})
+			if crabPos > max {
+				max = crabPos
+			}
+			if crabPos < min {
+				min = crabPos
+			}
 		}
 	}
+	s.min = min
+	s.max = max
 	return nil
+}
+
+func (s *swarm) analyze() {
+	for i := s.min; i <= s.max; i++ {
+		var fuel int
+		for _, c := range s.crabs {
+			fuel += c.fuelToPos(i)
+		}
+		if s.bestPosition.fuel == 0 {
+			s.bestPosition.fuel = 10000000
+		}
+		if fuel < s.bestPosition.fuel {
+			s.bestPosition.fuel = fuel
+			s.bestPosition.position = i
+		}
+	}
+}
+
+func (c *crab) fuelToPos(pos int) int {
+	fuel := c.position - pos
+
+	if fuel < 0 {
+		return -fuel
+	}
+	return fuel
 }
 
 func main() {
 
 	var s swarm
-	err := s.load("data/crabs_sample.txt")
+	err := s.load("data/crabs.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%#v", s)
+	s.analyze()
+	fmt.Println("Pos", s.bestPosition.position, "fuel", s.bestPosition.fuel)
 
 }
